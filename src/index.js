@@ -7,6 +7,7 @@ class CSRF {
         invalidTokenMessage: 'Invalid CSRF token',
         invalidTokenStatusCode: 403,
         excludedMethods: ['GET', 'HEAD', 'OPTIONS'],
+        excludedHosts: [/^(:.*:)?172\..*/, /^docker/],
         disableQuery: false
       },
       opts
@@ -39,6 +40,13 @@ class CSRF {
     ctx.response.__defineGetter__('csrf', () => ctx.csrf);
 
     if (this.opts.excludedMethods.indexOf(ctx.method) !== -1) {
+      return next();
+    }
+
+    if (
+      this.opts.excludedHosts.some(x => x.test(ctx.request.ip)) ||
+      this.opts.excludedHosts.some(x => x.test(ctx.request.host))
+    ) {
       return next();
     }
 
